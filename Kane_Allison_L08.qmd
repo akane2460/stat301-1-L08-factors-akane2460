@@ -1,0 +1,244 @@
+---
+title: "L08 Factors"
+subtitle: "Data Science 1 with R (STAT 301-1)"
+author: "Allison Kane"
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+    code-fold: show
+    link-external-newwindow: true
+
+execute:
+  warning: false
+  
+from: markdown+emoji 
+---
+
+::: {.callout-tip icon=false}
+
+## Github Repo Link
+
+[Allison Github Link](https://github.com/stat301-1-2023-fall/L08-factors-akane2460.git)
+
+:::
+
+## Load packages
+
+You should always begin by loading all necessary packages towards the beginning of your document.
+
+```{r}
+#| label: load-pkgs
+#| code-fold: false
+
+# Loading package(s)
+library(tidyverse)
+library(forcats)
+
+```
+
+## Datasets 
+
+We will be using the `gss_cat` dataset that is included in the `forcats` package. To view the documentation for the dataset, use `?gss_cat`.    
+
+## Exercises
+
+### Exercise 1 
+
+The variable `marital` has 6 levels: `"No answer"`, `"Never married"`, `"Separated"`, `"Divorced"`, `"Widowed"`, `"Married"`.
+
+Reorder the levels to be `"Married"`, `"Never married"`, `"Separated"`, `"Divorced"`, `"Widowed"`, `"No answer"`.
+
+This should be done within `mutate()` and store this new dataset as `gss_clean`.
+
+Prove this was successful by making a simple bar chart.
+
+::: {.callout-tip icon="false"}
+## Solution
+
+```{r}
+#| label: ex 01
+
+gss_clean <- gss_cat |> 
+  mutate(
+    marital = factor(marital,
+                     levels = c("Married", "Never married", "Separated", 
+                                "Divorced", "Widowed", "No answer"))
+  )
+
+gss_cat |> 
+  ggplot(aes(x = marital)) +
+  geom_bar()
+
+gss_clean |> 
+  ggplot(aes(x = marital)) +
+  geom_bar()
+
+```
+
+
+:::
+
+### Exercise 2
+
+Starting from the `gss_clean` dataset from Exercise 1, change the level `"Never married"` to read as `"single"` and lowercase all the other levels ie: `"married"`, `"separated"`, ...
+
+This should be done within the `gss_clean` dataset, ie: do not store as a new dataset, overwrite `gss_clean`.
+
+Prove this was successful by making a simple bar chart.
+
+::: {.callout-tip icon="false"}
+## Solution
+
+```{r}
+#| label: ex 02
+
+gss_clean |> 
+  mutate(
+    marital = recode(marital, "Never married" = "single"),
+    marital = tolower(marital)) |> 
+  ggplot(aes(x = marital)) +
+  geom_bar()
+
+```
+
+
+:::
+
+### Exercise 3
+
+The variable `race` has 4 levels: `"Other"`, `"Black"`, `"White"`, `"Not applicable"`
+
+Using your `gss_clean` dataset, demonstrate how to add the additional level options: `"Hispanic"`, `"Asian"`, `"American Indian"`.
+
+Prove this was successful by running the line of code `levels(gss_clean$race)`
+
+::: {.callout-tip icon="false"}
+## Solution
+
+```{r}
+#| label: exercise 3
+
+gss_clean <- gss_clean |> 
+  mutate(
+    race = factor(race, levels = c("Not applicable",
+                           "Black",
+                           "White",
+                           "Hispanic",
+                           "Asian",
+                           "American Indian")
+    )
+  )
+
+levels(gss_clean$race)
+```
+
+
+:::
+
+### Exercise 4
+
+What happens when you are defining levels in a `factor` with the `levels` argument and either do not define a level that exists in the dataset or have a typo in a level that exists in the dataset?  
+
+::: {.callout-tip icon="false"}
+## Solution
+
+In this situation, a new level will be created matching the typo and replacing the previous level in the dataset. The replaced value of the level becomes "NA" in the dataset. 
+
+:::
+
+
+### Exercise 5
+
+Create a bar chart to explore the distribution of `rincome` (reported income). What makes the default bar chart hard to understand? Improve the bar chart.
+
+::: {.callout-tip icon="false"}
+## Solution
+
+```{r}
+#| label: ex 05
+
+rincome_reordered <- c("Lt $1000", "$1000 to 2999", "$3000 to 3999", "$4000 to 4999",
+                       "$5000 to 5999", "$6000 to 6999", "$7000 to 7999", "$8000 to 9999",
+                       "$10000 - 14999", "$15000 - 19999", "$20000 - 24999", "$25000 or more",
+                       "No answer", "Don't know", "Refused", "Not applicable")
+
+gss_clean |> 
+  mutate(
+    rincome = factor(rincome, 
+                     levels = rincome_reordered)
+  ) |> 
+  ggplot(aes(x = ordered(rincome))) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
+  labs(
+    title = "Reported Income in `gss_cat` Dataset",
+    subtitle = "Most with a reported income made more than 25,000 dollars anually",
+    x = "Reported Income (in USD)",
+    y = "Count"
+  )
+```
+
+This plot initially was difficult to read because the order of the categories was not intuitive and their labels overlapped. 
+
+:::
+
+
+### Exercise 6
+
+The variable `year` is currently coded as an integer. Demonstrate how to convert this variable to a `factor`.
+
+::: {.callout-tip icon="false"}
+## Solution
+
+```{r}
+#| label: ex 06
+
+gss_clean$year <- as.integer(gss_clean$year)
+
+is.integer(gss_clean$year)
+
+```
+
+:::
+
+### Exercise 7
+
+Demonstrate how to collapse `rincome` into a smaller set of categories.
+
+::: {.callout-tip icon="false"}
+## Solution
+
+```{r}
+#| label: ex 07
+
+rincome_collapsed <- c("Low", "Low", "Low", "Low",
+                       "Medium", "Medium", "Medium", "Medium",
+                       "High", "High", "High", "High",
+                       "No answer", "Don't know", "Refused", "Not applicable")
+
+gss_clean |> 
+  mutate(
+    rincome = factor(rincome, 
+      levels = c("Lt $1000", "$1000 to 2999", "$3000 to 3999", "$4000 to 4999",
+                  "$5000 to 5999", "$6000 to 6999", "$7000 to 7999", "$8000 to 9999",
+                  "$10000 - 14999", "$15000 - 19999", "$20000 - 24999", "$25000 or more",
+                  "No answer", "Don't know", "Refused", "Not applicable"),
+      labels = rincome_collapsed
+    )
+  ) |> 
+ggplot(aes(x = ordered(rincome))) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
+  labs(
+    title = "Reported Income in `gss_cat` Dataset",
+    subtitle = "Most with a reported income made more than 25,000 dollars anually",
+    x = "Reported Income (in USD)",
+    y = "Count"
+  )
+
+```
+
+:::
+
